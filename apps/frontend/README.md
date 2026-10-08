@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Logilab Storefront
 
-## Getting Started
+The Logilab storefront is a responsive e-commerce web application for browsing electronics and robotics products. It is built with Next.js and React and uses the Logilab backend API for product, account, and order data.
 
-First, run the development server:
+## Features
+
+- Browse products, categories, and developer boards
+- Search and filter the product catalog
+- View product details and supporting technical information
+- Read blog posts
+- Manage a shopping cart and complete checkout
+- Sign up, sign in, and view account and order information
+
+## Technology Stack
+
+- Next.js 16 with the App Router
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- Zustand for client-side cart state
+- Shared API types from `@logilab/shared-types`
+
+## Prerequisites
+
+- Node.js 22 or later
+- npm
+- The Logilab backend API running locally
+
+For backend and database setup, see the [backend README](../backend/README.md).
+
+## Local Development
+
+Run the following commands from the repository root unless noted otherwise.
+
+### 1. Install dependencies
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm ci
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configure the backend URL
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create the local environment file from the example:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cp apps/frontend/.env.local.example apps/frontend/.env.local
+```
 
-## Learn More
+By default, the storefront connects to the backend at `http://localhost:4000`. Make sure the backend allows the storefront origin `http://localhost:3000` in its `CORS_ORIGIN` setting. See the [backend README](../backend/README.md) for backend configuration and startup instructions.
 
-To learn more about Next.js, take a look at the following resources:
+### 3. Start the storefront
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run dev:frontend
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000).
 
-## Deploy on Vercel
+## Environment Variables
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Variable | Required | Description |
+|---|---|---|
+| `NEXT_PUBLIC_BACKEND_URL` | No | Base URL of the backend API. Defaults to `http://localhost:4000`. This value is exposed to the browser bundle, so it must not contain secrets. |
+| `NEXT_PUBLIC_COOKIE_NAME` | No | Session cookie name used by the backend. Defaults to `logilab_session`. Keep it consistent with the backend's `COOKIE_NAME` setting if overridden. |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`NEXT_PUBLIC_*` values are embedded into the frontend during the build. Set the correct backend URL before creating a production build.
+
+## Common Commands
+
+Run these commands from the repository root:
+
+| Command | Description |
+|---|---|
+| `npm run dev:frontend` | Start the Next.js development server. |
+| `npm run lint --workspace=apps/frontend` | Run ESLint. |
+| `npm run build --workspace=apps/frontend` | Create a production build. |
+| `npm run start --workspace=apps/frontend` | Start the production server after building. |
+
+The production configuration uses Next.js standalone output. The Docker build file is `apps/frontend/Dockerfile`; build it from the repository root so npm workspaces and shared types are available:
+
+```bash
+docker build -f apps/frontend/Dockerfile .
+```
