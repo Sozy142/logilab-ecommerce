@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: logilab
+      POSTGRES_PASSWORD: logilab_dev_password
+      POSTGRES_DB: logilab
+    ports:
+      - "5433:5432"
+    volumes:
+      - logilab_db_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U logilab -d logilab"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  logilab_db_dev:
