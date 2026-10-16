@@ -66,7 +66,7 @@ docker run -d --name logilab-nginx --restart unless-stopped \
 
 
 echo "Waiting for Nginx & Backend to accept connections..."
-sleep 3 # Chờ 3 giây để Nginx ổn định hoàn toàn trước khi curl
+sleep 3
 
 for _ in $(seq 1 30); do
   if docker exec logilab-backend node -e "fetch('http://localhost:4000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"; then
