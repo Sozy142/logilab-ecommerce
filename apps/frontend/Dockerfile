@@ -20,6 +20,7 @@ RUN npm run build --workspace=apps/frontend
 
 FROM node:22-alpine AS runtime
 ENV NODE_ENV=production
+ENV HOSTNAME="0.0.0.0"
 WORKDIR /app
 # output: "standalone" đóng gói sẵn server.js + node_modules tối giản, nhưng
 # KHÔNG kèm static assets / public — phải copy tay 2 thứ đó riêng.

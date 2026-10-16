@@ -1,0 +1,48 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main  # Hoặc master tùy theo nhánh chính của bạn
+
+permissions:
+  id-token: write  # Bắt buộc để dùng OIDC xác thực với AWS không cần key
+  contents: read
+
+env:
+  AWS_REGION: ap-southeast-1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to AWS via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.10.0
+      - name: Initialize Terraform Backend
+        run: |
+          account_id="$(aws sts get-caller-identity --query Account --output text)"
+          bucket="logilab-terraform-state-$account_id-apse1"
+          terraform -chdir=infras/terraform init -reconfigure -backend-config="bucket=$bucket"
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Images, Push to ECR and Deploy via Makefile
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          make images-push IMAGE_TAG=$IMAGE_TAG
+          make app-deploy IMAGE_TAG=$IMAGE_TAG

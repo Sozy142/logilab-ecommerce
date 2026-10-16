@@ -27,7 +27,7 @@ export const app = express();
 // host) — trust X-Forwarded-For only from loopback so req.ip reflects the
 // real client (needed for rate limiting below), without trusting arbitrary
 // forwarded headers from elsewhere.
-app.set("trust proxy", "loopback");
+app.set("trust proxy", 2);
 
 // JSON API only, never serves HTML — cross-origin-resource-policy default
 // would otherwise block the frontend (different origin in local dev) from
