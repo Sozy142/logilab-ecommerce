@@ -260,8 +260,7 @@ resource "aws_iam_role_policy" "github_actions_ssm" {
           "ssm:DescribeInstanceInformation"
         ]
         Resource = [
-          "arn:aws:ssm:*:*:document/AWS-RunShellScript",
-          "arn:aws:ec2:*:*:instance/*"
+          "*"
         ]
       }
     ]
