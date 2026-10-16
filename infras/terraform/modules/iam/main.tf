@@ -167,7 +167,8 @@ resource "aws_iam_role_policy" "github_actions_ecr" {
           "ecr:CompleteLayerUpload",
           "ecr:UploadLayerPart",
           "ecr:InitiateLayerUpload",
-          "ecr:PutImage"
+          "ecr:PutImage",
+          "ecr:DescribeImages"
         ]
         Resource = var.ecr_repository_arns
       }
