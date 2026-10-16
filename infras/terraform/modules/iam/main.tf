@@ -203,3 +203,24 @@ resource "aws_iam_role_policy" "github_actions_s3_state" {
     ]
   })
 }
+
+resource "aws_iam_role_policy" "github_actions_asg" {
+  name = "${var.project_name}-github-actions-asg-policy"
+  role = aws_iam_role.github_actions.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = [
+          "autoscaling:DescribeAutoScalingInstances",
+          "autoscaling:DescribeAutoScalingGroups",
+          "autoscaling:UpdateAutoScalingGroup",
+          "autoscaling:StartInstanceRefresh"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
