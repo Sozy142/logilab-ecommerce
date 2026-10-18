@@ -56,6 +56,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "deployments_lifecycle" {
       noncurrent_days = 1 # Tự động xóa các version cũ sau 1 ngày
     }
 
+    filter {
+      prefix = ""
+    }
+
     expiration {
       expired_object_delete_marker = true # Tự động dọn dẹp các dấu vết xóa file
     }

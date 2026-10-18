@@ -78,7 +78,7 @@ module "iam" {
   source = "./modules/iam"
 
   project_name          = var.project_name
-  github_repo = var.github_repo
+  github_repo           = var.github_repo
   database_secret_arn   = module.database.master_user_secret_arn
   ecr_repository_arns   = values(module.ecr.repository_arns)
   media_bucket_arn      = module.media.media_bucket_arn
@@ -116,3 +116,9 @@ module "secrets" {
   project_name = var.project_name
 }
 
+module "cdn" {
+  source = "./modules/cdn"
+
+  domain_name        = var.domain_name
+  origin_domain_name = module.alb.alb_dns_name
+}

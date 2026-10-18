@@ -42,3 +42,8 @@ output "github_actions_role_arn" {
   description = "ARN of the IAM Role for GitHub Actions OIDC"
   value       = module.iam.github_actions_role_arn
 }
+
+output "domain_name_servers" {
+  value       = module.cdn.name_servers
+  description = "4 Nameservers Route 53"
+}
