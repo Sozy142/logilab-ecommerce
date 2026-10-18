@@ -116,9 +116,14 @@ module "secrets" {
   project_name = var.project_name
 }
 
+module "waf" {
+  source = "./modules/waf"
+}
+
 module "cdn" {
   source = "./modules/cdn"
 
   domain_name        = var.domain_name
   origin_domain_name = module.alb.alb_dns_name
+  web_acl_arn        = module.waf.web_acl_arn
 }

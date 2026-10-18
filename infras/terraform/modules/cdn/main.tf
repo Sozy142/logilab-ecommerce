@@ -47,6 +47,7 @@ resource "aws_cloudfront_distribution" "main" {
   comment = "CDN for Logilab Project"
   default_root_object = ""
 
+  web_acl_id = var.web_acl_arn
   origin {
     domain_name = var.origin_domain_name
     origin_id   = "ALB-Origin"
