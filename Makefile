@@ -57,8 +57,12 @@ db-init-rds:
 ssm-db-tunnel:
 	@set -eu; \
 	asg_name="$$(terraform -chdir=infras/terraform output -raw app_asg_name)"; \
-	instance_id="$$(aws autoscaling describe-auto-scaling-instances --region "$(AWS_REGION)" --query "AutoScalingInstances[?AutoScalingGroupName=='$$asg_name'].InstanceId | [0]" --output text)"; \
-	endpoint="$$(terraform -chdir=infras/terraform output -raw database_endpoint)"; \
+	instance_ids="$$(aws autoscaling describe-auto-scaling-instances --region "$(AWS_REGION)" --query "AutoScalingInstances[?AutoScalingGroupName=='$$asg_name'].InstanceId" --output text)"; \
+	if [ -z "$$instance_ids" ] || [ "$$instance_ids" = "None" ]; then \
+		echo "Error: No instances found in ASG $$asg_name!" >&2; \
+		exit 1; \
+	fi; \
+	echo "Target instances: $$instance_ids"; \
 	db_host="$${endpoint%:*}"; \
 	test -n "$$instance_id" && [ "$$instance_id" != "None" ]; \
 	test -n "$$db_host"; \
