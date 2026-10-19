@@ -57,17 +57,13 @@ db-init-rds:
 ssm-db-tunnel:
 	@set -eu; \
 	asg_name="$$(terraform -chdir=infras/terraform output -raw app_asg_name)"; \
-	instance_ids="$$(aws autoscaling describe-auto-scaling-instances --region "$(AWS_REGION)" --query "AutoScalingInstances[?AutoScalingGroupName=='$$asg_name'].InstanceId" --output text)"; \
-	if [ -z "$$instance_ids" ] || [ "$$instance_ids" = "None" ]; then \
-		echo "Error: No instances found in ASG $$asg_name!" >&2; \
-		exit 1; \
-	fi; \
-	echo "Target instances: $$instance_ids"; \
+	instance_id="$$(aws autoscaling describe-auto-scaling-instances --region "$(AWS_REGION)" --query "AutoScalingInstances[?AutoScalingGroupName=='$$asg_name'].InstanceId | [0]" --output text)"; \
+	endpoint="$$(terraform -chdir=infras/terraform output -raw database_endpoint)"; \
 	db_host="$${endpoint%:*}"; \
 	test -n "$$instance_id" && [ "$$instance_id" != "None" ]; \
 	test -n "$$db_host"; \
 	echo "Forwarding localhost:$(DB_LOCAL_PORT) to RDS through EC2. Press Ctrl-C to stop."; \
-		aws ssm start-session \
+	aws ssm start-session \
 		--region "$(AWS_REGION)" \
 		--target "$$instance_id" \
 		--document-name AWS-StartPortForwardingSessionToRemoteHost \
@@ -97,8 +93,9 @@ app-deploy:
 	backend_repo="$$(terraform -chdir=infras/terraform output -json ecr_repository_urls | jq -er '.backend')"; \
 	frontend_repo="$$(terraform -chdir=infras/terraform output -json ecr_repository_urls | jq -er '.frontend')"; \
 	asg_name="$$(terraform -chdir=infras/terraform output -raw app_asg_name)"; \
-	instance_id="$$(aws autoscaling describe-auto-scaling-instances --region "$(AWS_REGION)" --query "AutoScalingInstances[?AutoScalingGroupName=='$$asg_name'].InstanceId | [0]" --output text)"; \
-	test -n "$$instance_id" && [ "$$instance_id" != "None" ]; \
+	instance_ids="$$(aws autoscaling describe-auto-scaling-instances --region "$(AWS_REGION)" --query "AutoScalingInstances[?AutoScalingGroupName=='$$asg_name'].InstanceId" --output text)"; \
+	test -n "$$instance_ids" && [ "$$instance_ids" != "None" ]; \
+	echo "Deploying to target instances: $$instance_ids"; \
 	deploy_bucket="$$(terraform -chdir=infras/terraform output -raw deployment_bucket_name)"; \
 	media_bucket="$$(terraform -chdir=infras/terraform output -raw media_bucket_name)"; \
 	db_endpoint="$$(terraform -chdir=infras/terraform output -raw database_endpoint)"; \
@@ -130,12 +127,13 @@ app-deploy:
 			+ " bash /tmp/deploy-app.sh") \
 		]}')"; \
 	command_id="$$(aws ssm send-command --region "$(AWS_REGION)" \
-		--instance-ids "$$instance_id" --document-name AWS-RunShellScript \
+		--instance-ids $$instance_ids --document-name AWS-RunShellScript \
 		--parameters "$$commands" --query Command.CommandId --output text)"; \
 	echo "SSM command: $$command_id"; \
 	echo "Waiting for deployment to complete..."; \
+	first_instance="$$(echo $$instance_ids | awk '{print $$1}')"; \
 	while : ; do \
-		status="$$(aws ssm get-command-invocation --region "$(AWS_REGION)" --command-id "$$command_id" --instance-id "$$instance_id" --query Status --output text)"; \
+		status="$$(aws ssm get-command-invocation --region "$(AWS_REGION)" --command-id "$$command_id" --instance-id "$$first_instance" --query Status --output text)"; \
 		if [ "$$status" = "Success" ] || [ "$$status" = "Failed" ] || [ "$$status" = "Cancelled" ] || [ "$$status" = "TimedOut" ]; then \
 			break; \
 		fi; \
@@ -143,9 +141,9 @@ app-deploy:
 	done; \
 	echo "Deploy status: $$status"; \
 	aws ssm get-command-invocation --region "$(AWS_REGION)" \
-		--command-id "$$command_id" --instance-id "$$instance_id" \
+		--command-id "$$command_id" --instance-id "$$first_instance" \
 		--query StandardOutputContent --output text; \
 	aws ssm get-command-invocation --region "$(AWS_REGION)" \
-		--command-id "$$command_id" --instance-id "$$instance_id" \
+		--command-id "$$command_id" --instance-id "$$first_instance" \
 		--query StandardErrorContent --output text >&2; \
 	test "$$status" = "Success"
