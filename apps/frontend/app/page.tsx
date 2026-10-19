@@ -113,7 +113,7 @@ export default async function Home() {
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
         <div className="mb-8 sm:mb-14">
           <h2 className="text-center text-[32px] font-extrabold uppercase tracking-tight text-neutral-950 sm:text-5xl">
-            Sản phẩm nổi bật 123
+            Sản phẩm nổi bật
           </h2>
         </div>
 
